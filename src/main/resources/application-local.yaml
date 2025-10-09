@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:velarisdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  liquibase:
+    enabled: false
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.velaris: DEBUG
+
+jwt:
+  secret: Z3xG4JghB82s1q0l2Zdk23H7X3YpMfBzGzUoPqvA1QmK2rT0p9vE+Q==
+  expiration-ms: 360
+
+security:
+  public-endpoints: "/api/auth/**,/swagger-ui/**,/v3/api-docs/**"
+
+cors:
+  allowed-origins:
+    - "http://localhost:3000"
+  allowed-methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "PATCH"
+  allowed-headers:
+    - "*"
+  allow-credentials: true
