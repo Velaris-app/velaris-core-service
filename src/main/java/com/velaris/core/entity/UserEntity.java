@@ -1,4 +1,3 @@
-// com.velaris.core.entity.UserEntity
 package com.velaris.core.entity;
 
 import jakarta.persistence.*;

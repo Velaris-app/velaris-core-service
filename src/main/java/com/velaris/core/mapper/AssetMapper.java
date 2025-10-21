@@ -16,6 +16,7 @@ public interface AssetMapper {
     @Mapping(source = "purchaseYear", target = "year")
     Asset toDto(AssetEntity entity);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(source = "year", target = "purchaseYear")
     @Mapping(target = "ownerId", ignore = true)
     void updateEntity(Asset assetDto, @MappingTarget AssetEntity existing);

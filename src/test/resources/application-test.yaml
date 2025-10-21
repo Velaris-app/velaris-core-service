@@ -1,6 +1,9 @@
 spring:
+  application:
+    name: velaris-core
+
   datasource:
-    url: jdbc:h2:mem:velarisdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:velarisdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -9,10 +12,15 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc.lob.non_contextual_creation: true
+    open-in-view: false
 
   liquibase:
     enabled: true
-    change-log: classpath:local/changelog/db.changelog-master-h2.yaml
+    change-log: classpath:db/changelog/db.changelog-master-h2.yaml
 
 server:
   port: 8080
@@ -21,10 +29,11 @@ logging:
   level:
     root: INFO
     com.velaris: DEBUG
+    org.springframework.security: WARN
 
 jwt:
-  secret: Z3xG4JghB82s1q0l2Zdk23H7X3YpMfBzGzUoPqvA1QmK2rT0p9vE+Q==
-  expiration-ms: 360000000
+  secret: test-secret-key-test-secret-key-test-secret-key-test-secret-key-test-secret-key
+  expiration-ms: 3600000
 
 security:
   public-endpoints:

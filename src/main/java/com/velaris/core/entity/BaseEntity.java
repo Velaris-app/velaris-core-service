@@ -1,13 +1,11 @@
 package com.velaris.core.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.querydsl.core.annotations.QueryEntity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 
 @Getter

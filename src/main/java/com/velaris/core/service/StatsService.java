@@ -1,94 +1,62 @@
 package com.velaris.core.service;
 
-import com.velaris.api.model.StatsCategoryItem;
-import com.velaris.api.model.StatsOverview;
-import com.velaris.api.model.StatsTrendItem;
-import com.velaris.core.entity.AssetEntity;
-import com.velaris.core.repository.AssetRepository;
-import com.velaris.core.security.SecurityUtils;
+import com.velaris.api.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import com.velaris.core.mapper.StatsMapper;
+import com.velaris.core.repository.view.*;
 
 @Service
 @RequiredArgsConstructor
 public class StatsService {
 
-    private final AssetRepository assetRepository;
+    private final StatsTagViewRepository statsTagRepo;
+    private final StatsCategoryViewRepository categoryRepo;
+    private final StatsTrendViewRepository trendRepo;
+    private final StatsOverviewViewRepository overviewRepo;
+    private final StatsTrendDiffViewRepository trendDiffRepo;
+    private final StatsTopMoversViewRepository topMoversRepo;
+    private final StatsCategoryTrendViewRepository categoryTrendRepo;
+    private final StatsMapper mapper;
 
-    public StatsOverview getOverview() {
-        Long userId = SecurityUtils.currentUserId();
-        var assets = assetRepository.findAllByOwnerId(userId);
-
-        BigDecimal total = assets.stream()
-                .map(a -> safePrice(a).multiply(BigDecimal.valueOf(safeQuantity(a))))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        int count = assets.stream()
-                .mapToInt(this::safeQuantity)
-                .sum();
-
-        return new StatsOverview()
-                .totalValue(total)
-                .currency("USD")
-                .totalItems(count);
-    }
-
-    public List<StatsCategoryItem> getByCategory() {
-        Long userId = SecurityUtils.currentUserId();
-        var assets = assetRepository.findAllByOwnerId(userId);
-
-        return assets.stream()
-                .filter(a -> a.getCategory() != null)
-                .collect(Collectors.groupingBy(AssetEntity::getCategory))
-                .entrySet().stream()
-                .map(entry -> {
-                    String category = entry.getKey();
-                    List<AssetEntity> assetList = entry.getValue();
-
-                    BigDecimal totalValue = assetList.stream()
-                            .map(a -> safePrice(a).multiply(BigDecimal.valueOf(safeQuantity(a))))
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                    int itemCount = assetList.stream()
-                            .mapToInt(this::safeQuantity)
-                            .sum();
-
-                    return new StatsCategoryItem()
-                            .category(category)
-                            .totalValue(totalValue)
-                            .itemCount(itemCount);
-                })
-                .sorted(Comparator.comparing(StatsCategoryItem::getTotalValue).reversed())
+    public List<StatsCategoryItem> getCategoryStats(Long ownerId) {
+        return categoryRepo.findAllByOwnerId(ownerId).stream()
+                .map(mapper::toDto)
                 .toList();
     }
 
-    public List<StatsTrendItem> getTrend() {
-        Long userId = SecurityUtils.currentUserId();
-        var assets = assetRepository.findAllByOwnerId(userId);
-
-        return assets.stream()
-                .filter(a -> a.getCreatedAt() != null)
-                .collect(Collectors.groupingBy(a -> a.getCreatedAt().toLocalDate()))
-                .entrySet().stream()
-                .map(e -> new StatsTrendItem()
-                        .date(e.getKey())
-                        .value(e.getValue().stream()
-                                .map(a -> safePrice(a).multiply(BigDecimal.valueOf(safeQuantity(a))))
-                                .reduce(BigDecimal.ZERO, BigDecimal::add))
-                )
-                .sorted(Comparator.comparing(StatsTrendItem::getDate))
+    public List<StatsTrendItem> getTrendStats(Long ownerId) {
+        return trendRepo.findAllByOwnerId(ownerId).stream()
+                .map(mapper::toDto)
                 .toList();
     }
 
-    private BigDecimal safePrice(AssetEntity a) {
-        return a.getPurchasePrice() != null ? a.getPurchasePrice() : BigDecimal.ZERO;
+    public StatsOverview getOverview(Long ownerId) {
+        return mapper.toDto(overviewRepo.findByOwnerId(ownerId));
     }
 
-    private int safeQuantity(AssetEntity a) {
-        return a.getQuantity() != null ? a.getQuantity() : 0;
+    public List<StatsTagItem> getTagsStats(Long ownerId) {
+        return statsTagRepo.findByOwnerId(ownerId).stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    public List<StatsTrendDiffItem> getTrendDiffStats(Long ownerId) {
+        return trendDiffRepo.findByOwnerIdOrderByDateAsc(ownerId).stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    public List<StatsTopMoversItem> getTopMovers(Long ownerId) {
+        return topMoversRepo.findByOwnerIdOrderByDeltaValueDesc(ownerId).stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    public List<StatsCategoryTrendItem> getCategoryTrend(Long ownerId, String category) {
+        return categoryTrendRepo.findByOwnerIdAndCategoryOrderByCreatedDateAsc(ownerId, category).stream()
+                .map(mapper::toDto)
+                .toList();
     }
 }
