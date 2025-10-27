@@ -3,6 +3,7 @@ package com.velaris.core.controller;
 import com.velaris.api.StatsApi;
 import com.velaris.api.model.*;
 import com.velaris.core.service.StatsService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,37 +18,37 @@ public class StatsController implements StatsApi {
     private final StatsService statsService;
 
     @Override
-    public ResponseEntity<List<StatsCategoryItem>> getStatsByCategory() {
+    public ResponseEntity<List<CategoryItem>> getStatsByCategory() {
         return ResponseEntity.ok(statsService.getCategoryStats(currentUserId()));
     }
 
     @Override
-    public ResponseEntity<StatsOverview> getStatsOverview() {
+    public ResponseEntity<OverviewItem> getStatsOverview() {
         return ResponseEntity.ok(statsService.getOverview(currentUserId()));
     }
 
     @Override
-    public ResponseEntity<List<StatsTagItem>> getStatsTag() {
+    public ResponseEntity<List<TagItem>> getStatsTag() {
         return ResponseEntity.ok(statsService.getTagsStats(currentUserId()));
     }
 
     @Override
-    public ResponseEntity<List<StatsTrendItem>> getStatsTrend() {
-        return ResponseEntity.ok(statsService.getTrendStats(currentUserId()));
+    public ResponseEntity<List<TrendItem>> getStatsTrend(@Valid TrendRequest trendRequest) {
+        return ResponseEntity.ok(statsService.getTrendStats(currentUserId(), trendRequest));
     }
 
     @Override
-    public ResponseEntity<List<StatsTrendDiffItem>> getTrendDiffStats() {
+    public ResponseEntity<List<TopHoldingItem>> getTopHoldings(@Valid SearchFilter searchFilter) {
+        return ResponseEntity.ok(statsService.getTopHoldings(currentUserId(), searchFilter));
+    }
+
+    @Override
+    public ResponseEntity<List<TrendDiffItem>> getTrendDiffStats() {
         return ResponseEntity.ok(statsService.getTrendDiffStats(currentUserId()));
     }
 
     @Override
-    public ResponseEntity<List<StatsTopMoversItem>> getTopMovers() {
-        return ResponseEntity.ok(statsService.getTopMovers(currentUserId()));
-    }
-
-    @Override
-    public ResponseEntity<List<StatsCategoryTrendItem>> getCategoryTrend(String category) {
-        return ResponseEntity.ok(statsService.getCategoryTrend(currentUserId(), category));
+    public ResponseEntity<List<CategoryTrendItem>> getCategoryTrend(CategoryTrendRequest request) {
+        return ResponseEntity.ok(statsService.getCategoryTrend(currentUserId(), request));
     }
 }

@@ -1,67 +1,67 @@
 -- CATEGORY VIEW
-CREATE OR REPLACE VIEW stats_category_view AS
-SELECT
-    ROW_NUMBER() OVER() AS id,
-    a.owner_id,
-    a.category,
-    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS total_value,
-    SUM(COALESCE(a.quantity, 0)) AS item_count,
-    COUNT(*) AS unique_assets
-FROM assets a
-WHERE a.category IS NOT NULL
-GROUP BY a.owner_id, a.category;
+--CREATE OR REPLACE VIEW stats_category_view AS
+--SELECT
+--    ROW_NUMBER() OVER() AS id,
+--    a.owner_id,
+--    a.category,
+--    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS total_value,
+--    SUM(COALESCE(a.quantity, 0)) AS item_count,
+--    COUNT(*) AS unique_assets
+--FROM assets a
+--WHERE a.category IS NOT NULL
+--GROUP BY a.owner_id, a.category;
 
 -- OVERVIEW VIEW
-CREATE OR REPLACE VIEW stats_overview_view AS
-SELECT
-    ROW_NUMBER() OVER() AS id,
-    a.owner_id,
-    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS total_value,
-    SUM(COALESCE(a.quantity, 0)) AS total_items,
-    COUNT(*) AS asset_count,
-    'USD' AS currency
-FROM assets a
-GROUP BY a.owner_id;
+--CREATE OR REPLACE VIEW stats_overview_view AS
+--SELECT
+--    ROW_NUMBER() OVER() AS id,
+--    a.owner_id,
+--    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS total_value,
+--    SUM(COALESCE(a.quantity, 0)) AS total_items,
+--    COUNT(*) AS asset_count,
+--    'USD' AS currency
+--FROM assets a
+--GROUP BY a.owner_id;
 
 -- TREND VIEW
-CREATE OR REPLACE VIEW stats_trend_view AS
-SELECT
-    ROW_NUMBER() OVER() AS id,
-    a.owner_id,
-    DATE(a.created_at) AS date,
-    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS value,
-    COUNT(*) AS items_added
-FROM assets a
-GROUP BY a.owner_id, DATE(a.created_at)
-ORDER BY date ASC;
+--CREATE OR REPLACE VIEW stats_trend_view AS
+--SELECT
+--    ROW_NUMBER() OVER() AS id,
+--    a.owner_id,
+--    DATE(a.created_at) AS date,
+--    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS value,
+--    COUNT(*) AS items_added
+--FROM assets a
+--GROUP BY a.owner_id, DATE(a.created_at)
+--ORDER BY date ASC;
 
 -- RECENT ACTIVITIES VIEW
-CREATE OR REPLACE VIEW recent_activities_view AS
-SELECT
-    ROW_NUMBER() OVER() AS id,
-    a.owner_id,
-    a.id AS asset_id,
-    a.name,
-    a.category,
-    a.purchase_price,
-    a.quantity,
-    a.created_at,
-    a.updated_at,
-    CASE
-        WHEN a.created_at = a.updated_at THEN 'CREATED'
-        ELSE 'UPDATED'
-    END AS activity_type
-FROM assets a
-ORDER BY a.updated_at DESC;
+--CREATE OR REPLACE VIEW recent_activities_view AS
+--SELECT
+--    ROW_NUMBER() OVER() AS id,
+--    a.owner_id,
+--    a.id AS asset_id,
+--    a.name,
+--    a.category,
+--    a.purchase_price,
+--    a.quantity,
+--    a.created_at,
+--    a.updated_at,
+--    CASE
+--        WHEN a.created_at = a.updated_at THEN 'CREATED'
+--        ELSE 'UPDATED'
+--    END AS activity_type
+--FROM assets a
+--ORDER BY a.updated_at DESC;
 
 -- STATS TAG VIEW
-CREATE OR REPLACE VIEW stats_tag_view AS
-SELECT
-    ROW_NUMBER() OVER() AS id,
-    a.owner_id,
-    t.tag,
-    COUNT(*) AS assets_count,
-    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS total_value
-FROM assets a
-JOIN asset_tags t ON t.asset_id = a.id
-GROUP BY a.owner_id, t.tag;
+--CREATE OR REPLACE VIEW stats_tag_view AS
+--SELECT
+--    ROW_NUMBER() OVER() AS id,
+--    a.owner_id,
+--    t.tag,
+--    COUNT(*) AS assets_count,
+--    SUM(COALESCE(a.purchase_price, 0) * COALESCE(a.quantity, 0)) AS total_value
+--FROM assets a
+--JOIN asset_tags t ON t.asset_id = a.id
+--GROUP BY a.owner_id, t.tag;

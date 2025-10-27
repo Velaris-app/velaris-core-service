@@ -1,5 +1,6 @@
 package com.velaris.core.entity;
 
+import com.velaris.core.entity.common.BaseUuidEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -13,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(exclude = "passwordHash")
 @EqualsAndHashCode(callSuper = true)
-public class UserEntity extends BaseEntity {
+public class UserEntity extends BaseUuidEntity {
 
     @Column(nullable = false, unique = true, length = 64)
     private String username;

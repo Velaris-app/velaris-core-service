@@ -4,8 +4,8 @@ import com.velaris.core.IntegrationTest;
 import com.velaris.core.TestObjects;
 import com.velaris.core.entity.AssetEntity;
 import com.velaris.core.entity.UserEntity;
-import com.velaris.core.repository.AssetRepository;
-import com.velaris.core.repository.UserRepository;
+import com.velaris.core.repository.jpa.JpaAssetRepository;
+import com.velaris.core.repository.jpa.JpaUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,22 +28,22 @@ class StatsControllerIT {
     private MockMvc mockMvc;
 
     @Autowired
-    private UserRepository userRepository;
+    private JpaUserRepository jpaUserRepository;
 
     @Autowired
-    private AssetRepository assetRepository;
+    private JpaAssetRepository jpaAssetRepository;
 
     @BeforeEach
     void setUp() {
-        assetRepository.deleteAll();
-        userRepository.deleteAll();
+        jpaAssetRepository.deleteAll();
+        jpaUserRepository.deleteAll();
 
-        UserEntity user = userRepository.save(TestObjects.user(null, "test"));
+        UserEntity user = jpaUserRepository.save(TestObjects.user(null, "test"));
 
-        AssetEntity asset1 = TestObjects.asset(user.getId(), "Cards", "Card 1", new BigDecimal("10.0"), 2);
-        AssetEntity asset2 = TestObjects.asset(user.getId(), "Cards", "Card 2", new BigDecimal("20.0"), 1);
+        AssetEntity asset1 = TestObjects.asset(user, "Cards", "Card 1", new BigDecimal("10.0"), 2);
+        AssetEntity asset2 = TestObjects.asset(user, "Cards", "Card 2", new BigDecimal("20.0"), 1);
 
-        assetRepository.saveAll(List.of(asset1, asset2));
+        jpaAssetRepository.saveAll(List.of(asset1, asset2));
     }
 
     @Test

@@ -6,9 +6,9 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Immutable;
-
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Immutable
@@ -17,7 +17,7 @@ import java.time.OffsetDateTime;
 @Table(name = "stats_trend_diff_view")
 public class StatsTrendDiffView extends BaseView {
 
-    private Long ownerId;
+    private UUID ownerId;
     private OffsetDateTime date;
     private BigDecimal totalValue;
     private BigDecimal deltaValue;

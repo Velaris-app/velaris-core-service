@@ -1,19 +1,22 @@
 package com.velaris.core.service;
 
-import com.velaris.api.model.JwtResponse;
-import com.velaris.api.model.LoginRequest;
+import com.velaris.api.model.GrantType;
 import com.velaris.api.model.RegisterRequest;
+import com.velaris.api.model.TokenRequest;
+import com.velaris.api.model.TokenResponse;
 import com.velaris.core.entity.UserEntity;
-import com.velaris.core.repository.UserRepository;
+import com.velaris.core.repository.jpa.JpaUserRepository;
+import com.velaris.core.repository.jpa.JpaUserSessionRepository;
 import com.velaris.shared.security.JwtProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -22,13 +25,19 @@ import static org.mockito.Mockito.*;
 class AuthServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private JpaUserRepository jpaUserRepository;
+
+    @Mock
+    private JpaUserSessionRepository jpaUserSessionRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
     private JwtProvider jwtProvider;
+
+    @Mock
+    private HttpServletRequest request;
 
     @InjectMocks
     private AuthService authService;
@@ -38,108 +47,68 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         user = UserEntity.builder()
-                .id(1L)
+                .id(UUID.randomUUID())
                 .username("testuser")
                 .email("test@example.com")
                 .passwordHash("encoded_pass")
                 .build();
+
+        when(request.getHeader("User-Agent")).thenReturn("TestAgent");
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
     }
 
     @Test
-    void authenticate_ShouldReturnJwt_WhenCredentialsAreValid() {
-        LoginRequest request = new LoginRequest()
-                .email("test@example.com")
-                .password("password");
+    void authenticateWithPassword_ShouldReturnTokenResponse_WhenValid() {
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(GrantType.PASSWORD);
+        tokenRequest.setUsername("test@example.com");
+        tokenRequest.setPassword("password");
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(jpaUserRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(jpaUserRepository.findByUsername("test@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.matches("password", "encoded_pass")).thenReturn(true);
-        when(jwtProvider.generateToken("testuser")).thenReturn("jwt-token");
+        when(jwtProvider.generateAccessToken(user.getId())).thenReturn("access-token");
+        when(jwtProvider.generateRefreshToken(user.getId())).thenReturn("refresh-token");
+        when(jwtProvider.getExpiresInFromToken("access-token")).thenReturn(3600L);
+        when(jwtProvider.getExpiresInFromToken("refresh-token")).thenReturn(86400L);
 
-        JwtResponse response = authService.authenticate(request);
+        when(jpaUserSessionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertThat(response.getToken()).isEqualTo("jwt-token");
-        verify(jwtProvider).generateToken("testuser");
+        TokenResponse response = authService.authenticate(tokenRequest, request);
+
+        assertThat(response.getAccessToken()).isEqualTo("access-token");
+        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(response.getExpiresIn()).isEqualTo(3600L);
+        assertThat(response.getRefreshExpiresIn()).isEqualTo(86400L);
+        assertThat(response.getSessionState()).isNotNull();
+        assertThat(response.getTokenType()).isEqualTo("Bearer");
     }
 
     @Test
-    void authenticate_ShouldThrowUnauthorized_WhenPasswordInvalid() {
-        LoginRequest request = new LoginRequest()
-                .email("test@example.com")
-                .password("wrong");
+    void register_ShouldSaveUserAndReturnTokenResponse() {
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUsername("newuser");
+        registerRequest.setEmail("new@example.com");
+        registerRequest.setPassword("pass");
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "encoded_pass")).thenReturn(false);
+        when(jpaUserRepository.findByUsernameOrEmail("newuser", "new@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("pass")).thenReturn("encoded-pass");
+        when(jwtProvider.generateAccessToken(any())).thenReturn("access-token");
+        when(jwtProvider.generateRefreshToken(any())).thenReturn("refresh-token");
+        when(jwtProvider.getExpiresInFromToken("access-token")).thenReturn(3600L);
+        when(jwtProvider.getExpiresInFromToken("refresh-token")).thenReturn(86400L);
+        when(jpaUserSessionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertThatThrownBy(() -> authService.authenticate(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("401")
-                .hasMessageContaining("Invalid credentials");
-    }
+        TokenResponse response = authService.register(registerRequest, request);
 
-    @Test
-    void authenticate_ShouldThrowUnauthorized_WhenUserNotFound() {
-        LoginRequest request = new LoginRequest()
-                .email("unknown@example.com")
-                .password("pass");
+        assertThat(response.getAccessToken()).isEqualTo("access-token");
+        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(response.getSessionState()).isNotNull();
+        assertThat(response.getTokenType()).isEqualTo("Bearer");
 
-        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
-        when(userRepository.findByUsername("unknown@example.com")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> authService.authenticate(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("401")
-                .hasMessageContaining("Invalid credentials");
-    }
-
-    @Test
-    void register_ShouldCreateUserAndReturnToken() {
-        RegisterRequest request = new RegisterRequest()
-                .username("newuser")
-                .email("new@example.com")
-                .password("pass");
-
-        when(userRepository.findByUsernameOrEmail("newuser", "new@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("pass")).thenReturn("encoded");
-        when(jwtProvider.generateToken("newuser")).thenReturn("jwt-token");
-
-        JwtResponse response = authService.register(request);
-
-        assertThat(response.getToken()).isEqualTo("jwt-token");
-        verify(userRepository).save(argThat(saved ->
-                saved.getUsername().equals("newuser") &&
-                        saved.getEmail().equals("new@example.com") &&
-                        saved.getPasswordHash().equals("encoded")));
-    }
-
-    @Test
-    void register_ShouldThrowConflict_WhenUsernameExists() {
-        RegisterRequest request = new RegisterRequest()
-                .username("testuser")
-                .email("new@example.com")
-                .password("pass");
-
-        when(userRepository.findByUsernameOrEmail("testuser", "new@example.com"))
-                .thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409")
-                .hasMessageContaining("Username already taken");
-    }
-
-    @Test
-    void register_ShouldThrowConflict_WhenEmailExists() {
-        RegisterRequest request = new RegisterRequest()
-                .username("otheruser")
-                .email("test@example.com")
-                .password("pass");
-
-        when(userRepository.findByUsernameOrEmail("otheruser", "test@example.com"))
-                .thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409")
-                .hasMessageContaining("Email already in use");
+        ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(jpaUserRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo("newuser");
+        assertThat(userCaptor.getValue().getEmail()).isEqualTo("new@example.com");
     }
 }

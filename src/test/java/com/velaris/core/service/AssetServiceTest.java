@@ -2,8 +2,9 @@ package com.velaris.core.service;
 
 import com.velaris.api.model.Asset;
 import com.velaris.core.entity.AssetEntity;
+import com.velaris.core.entity.UserEntity;
 import com.velaris.core.mapper.AssetMapper;
-import com.velaris.core.repository.AssetRepository;
+import com.velaris.core.repository.jpa.JpaAssetRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -20,7 +22,7 @@ import static org.mockito.Mockito.*;
 class AssetServiceTest {
 
     @Mock
-    private AssetRepository assetRepository;
+    private JpaAssetRepository jpaAssetRepository;
 
     @Mock
     private AssetMapper assetMapper;
@@ -44,44 +46,46 @@ class AssetServiceTest {
         assetEntity.setName("Test Asset");
         assetEntity.setPurchasePrice(BigDecimal.valueOf(100));
         assetEntity.setQuantity(2);
-        assetEntity.setOwnerId(10L);
+        assetEntity.setOwner(UserEntity.builder()
+                .id(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .build());
     }
 
     @Test
     void testCreateAsset() {
         when(assetMapper.toEntity(assetDto)).thenReturn(assetEntity);
-        when(assetRepository.save(assetEntity)).thenReturn(assetEntity);
+        when(jpaAssetRepository.save(assetEntity)).thenReturn(assetEntity);
         when(assetMapper.toDto(assetEntity)).thenReturn(assetDto);
 
-        Asset result = assetService.createAsset(10L, assetDto);
+        Asset result = assetService.createAsset(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"), assetDto);
 
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("Test Asset");
-        verify(assetRepository).save(assetEntity);
+        verify(jpaAssetRepository).save(assetEntity);
     }
 
     @Test
     void testGetAssetById() {
-        when(assetRepository.findById(1L)).thenReturn(Optional.of(assetEntity));
+        when(jpaAssetRepository.findById(1L)).thenReturn(Optional.of(assetEntity));
         when(assetMapper.toDto(assetEntity)).thenReturn(assetDto);
 
         Asset result = assetService.getAssetById("1");
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("Test Asset");
-        verify(assetRepository).findById(1L);
+        verify(jpaAssetRepository).findById(1L);
     }
 
     @Test
     void testGetAllAssets() {
-        when(assetRepository.findAll()).thenReturn(List.of(assetEntity));
+        when(jpaAssetRepository.findAll()).thenReturn(List.of(assetEntity));
         when(assetMapper.toDto(assetEntity)).thenReturn(assetDto);
 
         List<Asset> result = assetService.getAllAssets();
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getName()).isEqualTo("Test Asset");
-        verify(assetRepository).findAll();
+        verify(jpaAssetRepository).findAll();
     }
 
     @Test
@@ -89,7 +93,7 @@ class AssetServiceTest {
         Asset updatedDto = new Asset();
         updatedDto.setName("Updated Asset");
 
-        when(assetRepository.findById(1L)).thenReturn(Optional.of(assetEntity));
+        when(jpaAssetRepository.findById(1L)).thenReturn(Optional.of(assetEntity));
         doAnswer(invocation -> {
             Asset dto = invocation.getArgument(0);
             AssetEntity existing = invocation.getArgument(1);
@@ -101,13 +105,13 @@ class AssetServiceTest {
         Asset result = assetService.updateAsset("1", updatedDto);
 
         assertThat(result.getName()).isEqualTo("Updated Asset");
-        verify(assetRepository).save(assetEntity);
+        verify(jpaAssetRepository).save(assetEntity);
     }
 
     @Test
     void testDeleteAsset() {
         assetService.deleteAsset("1");
 
-        verify(assetRepository).deleteById(1L);
+        verify(jpaAssetRepository).deleteById(1L);
     }
 }

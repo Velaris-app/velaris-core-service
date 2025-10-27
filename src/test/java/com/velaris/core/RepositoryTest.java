@@ -1,6 +1,6 @@
 package com.velaris.core;
 
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -9,8 +9,8 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@SpringBootTest
+@DataJpaTest
+@ContextConfiguration(classes = TestApplication.class)
 @ActiveProfiles("test")
-@ContextConfiguration(classes = CoreApplication.class)
-public @interface IntegrationTest {
+public @interface RepositoryTest {
 }

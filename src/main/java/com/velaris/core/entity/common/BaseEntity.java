@@ -1,6 +1,5 @@
-package com.velaris.core.entity;
+package com.velaris.core.entity.common;
 
-import com.querydsl.core.annotations.QueryEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;

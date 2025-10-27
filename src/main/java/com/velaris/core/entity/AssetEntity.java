@@ -1,11 +1,13 @@
 package com.velaris.core.entity;
 
-import com.querydsl.core.annotations.QueryEntity;
+import com.velaris.core.entity.common.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "assets")
@@ -14,7 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@QueryEntity
 public class AssetEntity extends AuditableEntity {
 
     private String name;
@@ -40,7 +41,10 @@ public class AssetEntity extends AuditableEntity {
             joinColumns = @JoinColumn(name = "asset_id")
     )
     @Column(name = "tag")
-    private List<String> tags;
+    @Builder.Default
+    private Set<String> tags = new HashSet<>();
 
-    private Long ownerId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_id")
+    private UserEntity owner;
 }
