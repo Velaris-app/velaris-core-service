@@ -1,4 +1,4 @@
-package com.velaris.core.repository.jpa;
+package com.velaris.core.repository;
 
 import com.velaris.core.entity.AssetEntity;
 import com.velaris.core.entity.projection.*;
@@ -12,18 +12,21 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface JpaStatsRepository extends JpaRepository<AssetEntity, Long> {
+public interface StatsRepository extends JpaRepository<AssetEntity, Long> {
 
     @Query("""
         SELECT a.category AS category,
                COALESCE(SUM(a.purchasePrice * a.quantity), 0) AS totalValue,
-               COALESCE(SUM(a.quantity), 0) AS totalItems,
-               COUNT(a.id) AS assetCount
+               COALESCE(SUM(a.quantity), 0) AS itemCount,
+               COUNT(a.id) AS uniqueAssets,
+               COALESCE(SUM(a.purchasePrice * a.quantity) / 
+               CAST((SELECT SUM(a2.purchasePrice * a2.quantity) 
+                     FROM AssetEntity a2 WHERE a2.owner.id = :ownerId) AS double), 0) AS percentageOfTotal
         FROM AssetEntity a
         WHERE a.owner.id = :ownerId AND a.category IS NOT NULL
         GROUP BY a.category
     """)
-    List<StatsCategoryProjection> getCategoryStats(@Param("ownerId") UUID ownerId); // DONE
+    List<StatsCategoryProjection> getCategoryStats(@Param("ownerId") UUID ownerId);
 
     @Query("""
         SELECT COALESCE(SUM(a.purchasePrice * a.quantity), 0) AS totalValue,
@@ -38,7 +41,7 @@ public interface JpaStatsRepository extends JpaRepository<AssetEntity, Long> {
     @Query("""
         SELECT a.createdAt AS date,
                COALESCE(SUM(a.purchasePrice * a.quantity), 0) AS totalValue,
-               COUNT(a.id) AS count
+               COUNT(a.id) AS itemsAdded
         FROM AssetEntity a
         WHERE a.owner.id = :ownerId
           AND (:startDate IS NULL OR a.createdAt >= :startDate)

@@ -1,6 +1,6 @@
 package com.velaris.core.entity.view;
 
-import com.velaris.core.entity.BaseView;
+import com.velaris.core.entity.common.BaseView;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;

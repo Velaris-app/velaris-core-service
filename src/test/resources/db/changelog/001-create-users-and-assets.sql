@@ -34,7 +34,7 @@ CREATE TABLE user_sessions (
     expires_at TIMESTAMP NOT NULL,
     access_token VARCHAR(512),
     refresh_token VARCHAR(512),
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Recent activities
@@ -43,8 +43,8 @@ CREATE TABLE recent_activities (
     owner_id UUID,
     asset_id BIGINT,
     activity_type VARCHAR(50),
-    snapshot_before TEXT,
-    snapshot_after TEXT,
+    snapshot_before CLOB,
+    snapshot_after CLOB,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_recent_activity_asset

@@ -5,8 +5,8 @@ import com.velaris.api.model.Asset;
 import com.velaris.core.IntegrationTest;
 import com.velaris.core.TestObjects;
 import com.velaris.core.entity.AssetEntity;
-import com.velaris.core.repository.jpa.JpaAssetRepository;
-import com.velaris.core.repository.jpa.JpaUserRepository;
+import com.velaris.core.repository.AssetRepository;
+import com.velaris.core.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,22 +33,22 @@ class AssetsControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private JpaUserRepository jpaUserRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    private JpaAssetRepository jpaAssetRepository;
+    private AssetRepository assetRepository;
 
     @BeforeEach
     void setUp() {
-        jpaAssetRepository.deleteAll();
-        jpaUserRepository.deleteAll();
+        assetRepository.deleteAll();
+        userRepository.deleteAll();
 
-        var testUser = jpaUserRepository.save(TestObjects.user(null, "test"));
+        var testUser = userRepository.save(TestObjects.user(null, "test"));
 
         AssetEntity asset1 = TestObjects.asset(testUser, "Cards", "Card 1", new BigDecimal("10.0"), 2);
         AssetEntity asset2 = TestObjects.asset(testUser, "Cards", "Card 2", new BigDecimal("20.0"), 1);
 
-        jpaAssetRepository.saveAll(List.of(asset1, asset2));
+        assetRepository.saveAll(List.of(asset1, asset2));
     }
 
     @Test
@@ -72,7 +72,7 @@ class AssetsControllerTest {
     @Test
     @WithUserDetails(value = "test", userDetailsServiceBeanName = "securityUserService", setupBefore = TEST_EXECUTION)
     void testGetAsset() throws Exception {
-        AssetEntity existingAsset = jpaAssetRepository.findAll().stream().findFirst().orElseThrow();
+        AssetEntity existingAsset = assetRepository.findAll().stream().findFirst().orElseThrow();
 
         mockMvc.perform(get("/assets/" + existingAsset.getId()))
                 .andExpect(status().isOk())
@@ -93,7 +93,7 @@ class AssetsControllerTest {
     @Test
     @WithUserDetails(value = "test", userDetailsServiceBeanName = "securityUserService", setupBefore = TEST_EXECUTION)
     void testModifyAsset() throws Exception {
-        AssetEntity existingAsset = jpaAssetRepository.findAll().stream().findFirst().orElseThrow();
+        AssetEntity existingAsset = assetRepository.findAll().stream().findFirst().orElseThrow();
 
         Asset assetUpdate = new Asset();
         assetUpdate.setName("Updated Name");
@@ -113,7 +113,7 @@ class AssetsControllerTest {
     @Test
     @WithUserDetails(value = "test", userDetailsServiceBeanName = "securityUserService", setupBefore = TEST_EXECUTION)
     void testDeleteAsset() throws Exception {
-        AssetEntity existingAsset = jpaAssetRepository.findAll().stream().findFirst().orElseThrow();
+        AssetEntity existingAsset = assetRepository.findAll().stream().findFirst().orElseThrow();
 
         mockMvc.perform(delete("/assets/" + existingAsset.getId()))
                 .andExpect(status().isNoContent());

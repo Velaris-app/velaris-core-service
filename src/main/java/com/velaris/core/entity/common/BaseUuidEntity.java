@@ -16,7 +16,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 public abstract class BaseUuidEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

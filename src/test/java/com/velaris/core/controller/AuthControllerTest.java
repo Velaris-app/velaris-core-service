@@ -6,6 +6,8 @@ import com.velaris.api.model.RegisterRequest;
 import com.velaris.api.model.TokenRequest;
 import com.velaris.api.model.TokenResponse;
 import com.velaris.core.IntegrationTest;
+import com.velaris.core.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +28,14 @@ class AuthControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    void cleanDatabase() {
+        userRepository.deleteAll();
+    }
 
     @Test
     void testRegisterAndLoginFlow() throws Exception {
@@ -69,7 +79,7 @@ class AuthControllerTest {
         request.setPassword(password);
         request.setGrantType(GrantType.PASSWORD);
 
-        String responseJson = mockMvc.perform(post("/auth/login")
+        String responseJson = mockMvc.perform(post("/auth/token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

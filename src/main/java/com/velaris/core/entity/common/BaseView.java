@@ -1,4 +1,4 @@
-package com.velaris.core.entity;
+package com.velaris.core.entity.common;
 
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;

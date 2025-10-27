@@ -2,30 +2,38 @@ package com.velaris.core.service;
 
 import com.velaris.api.model.Asset;
 import com.velaris.api.model.RecentActivitiesItem;
+import com.velaris.core.entity.ActivityType;
 import com.velaris.core.entity.AssetEntity;
+import com.velaris.core.entity.UserEntity;
 import com.velaris.core.mapper.AssetMapper;
-import com.velaris.core.mapper.RecentActivitiesMapper;
 import com.velaris.core.repository.AssetRepository;
-import com.velaris.core.repository.view.RecentActivitiesViewRepository;
+import com.velaris.core.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AssetService {
 
-    private final RecentActivitiesViewRepository activitiesRepository;
     private final AssetRepository assetRepository;
     private final AssetMapper assetMapper;
-    private final RecentActivitiesMapper recentActivitiesMapper;
+    private final RecentActivityService recentActivityService;
+    private final UserRepository userRepository;
 
     @Transactional
-    public Asset createAsset(Long ownerId, Asset assetDto) {
-        AssetEntity entity = assetMapper.toEntity(assetDto);
-        entity.setOwnerId(ownerId);
-        return assetMapper.toDto(assetRepository.save(entity));
+    public Asset createAsset(UUID ownerId, Asset assetDto) {
+        UserEntity owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        AssetEntity asset = assetMapper.toEntity(assetDto);
+        asset.setOwner(owner);
+
+        var saved = assetRepository.save(asset);
+        recentActivityService.logActivity(null, ActivityType.CREATED, asset);
+        return assetMapper.toDto(saved);
     }
 
     @Transactional(readOnly = true)
@@ -47,19 +55,21 @@ public class AssetService {
         AssetEntity existing = assetRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
         assetMapper.updateEntity(assetDto, existing);
-        assetRepository.save(existing);
+        AssetEntity updated = assetRepository.save(existing);
+        recentActivityService.logActivity(updated, ActivityType.UPDATED, existing);
         return assetMapper.toDto(existing);
     }
 
     @Transactional
     public void deleteAsset(String id) {
-        assetRepository.deleteById(Long.valueOf(id));
+        AssetEntity existing = assetRepository.findById(Long.valueOf(id))
+                .orElseThrow(() -> new RuntimeException("Asset not found"));
+        recentActivityService.logActivity(existing, ActivityType.DELETED, null);
+        assetRepository.deleteById(existing.getId());
     }
 
     @Transactional(readOnly = true)
-    public List<RecentActivitiesItem> getRecentActivitiesForUser(Long userId) {
-        return activitiesRepository.findAllByOwnerId(userId).stream()
-                .map(recentActivitiesMapper::toDto)
-                .toList();
+    public List<RecentActivitiesItem> getRecentActivitiesForUser(UUID userId) {
+        return recentActivityService.getRecentActivitiesForUser(userId);
     }
 }

@@ -1,18 +1,26 @@
 package com.velaris.core.mapper;
 
 import com.velaris.api.model.*;
+import com.velaris.core.entity.projection.*;
 import com.velaris.core.entity.view.*;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface StatsMapper {
 
-    StatsCategoryItem toDto(StatsCategoryView entity);
-    StatsOverview toDto(StatsOverviewView entity);
-    StatsTrendItem toDto(StatsTrendView entity);
-    StatsTagItem toDto(StatsTagView entity);
+    TrendDiffItem toDto(StatsTrendDiffView p);
 
-    StatsTrendDiffItem toDto(StatsTrendDiffView entity);
-    StatsTopMoversItem toDto(StatsTopMoversView entity);
-    StatsCategoryTrendItem toDto(StatsCategoryTrendView entity);
+    CategoryItem toDto(StatsCategoryProjection p);
+
+    OverviewItem toDto(StatsOverviewProjection p);
+
+    TrendItem toDto(StatsTrendProjection p);
+
+    TopHoldingItem toDto(StatsTopHoldingsProjection p);
+
+    @Mapping(source = "p.tagName", target = "tag")
+    TagItem toDto(StatsTagProjection p);
+
+    CategoryTrendItem toDto(StatsCategoryTrendProjection p);
 }

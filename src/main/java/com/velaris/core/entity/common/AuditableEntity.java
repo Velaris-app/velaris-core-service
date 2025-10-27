@@ -27,7 +27,9 @@ public abstract class AuditableEntity extends BaseEntity {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = OffsetDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = OffsetDateTime.now();
+        }
         this.updatedAt = this.createdAt;
     }
 

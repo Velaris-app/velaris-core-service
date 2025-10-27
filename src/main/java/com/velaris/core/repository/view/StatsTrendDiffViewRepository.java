@@ -1,4 +1,4 @@
-package com.velaris.core.repository.jpa.view;
+package com.velaris.core.repository.view;
 
 import com.velaris.core.entity.view.StatsTrendDiffView;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface JpaStatsTrendDiffViewRepository extends JpaRepository<StatsTrendDiffView, Long> {
+public interface StatsTrendDiffViewRepository extends JpaRepository<StatsTrendDiffView, Long> {
     List<StatsTrendDiffView> findByOwnerIdOrderByDateAsc(UUID ownerId);
 }

@@ -1,4 +1,4 @@
-package com.velaris.core.repository.jpa;
+package com.velaris.core.repository;
 
 import com.velaris.core.entity.UserSessionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface JpaUserSessionRepository extends JpaRepository<UserSessionEntity, UUID> {
+public interface UserSessionRepository extends JpaRepository<UserSessionEntity, UUID> {
     List<UserSessionEntity> findByUserId(UUID userId);
-
     void deleteByUserId(UUID userId);
 }

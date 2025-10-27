@@ -23,9 +23,9 @@ public class RecentActivityEntity extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     private ActivityType activityType;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String snapshotBefore;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String snapshotAfter;
 }

@@ -2,8 +2,8 @@ package com.velaris.core.service;
 
 import com.velaris.api.model.*;
 import com.velaris.core.mapper.StatsMapper;
-import com.velaris.core.repository.jpa.JpaStatsRepository;
-import com.velaris.core.repository.jpa.view.JpaStatsTrendDiffViewRepository;
+import com.velaris.core.repository.StatsRepository;
+import com.velaris.core.repository.view.StatsTrendDiffViewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,25 +18,25 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class StatsService {
 
-    private final JpaStatsRepository jpaStatsRepository;
-    private final JpaStatsTrendDiffViewRepository diffViewRepository;
+    private final StatsRepository statsRepository;
+    private final StatsTrendDiffViewRepository diffViewRepository;
     private final StatsMapper mapper;
 
     public List<CategoryItem> getCategoryStats(UUID ownerId) {
-        return mapList(jpaStatsRepository.getCategoryStats(ownerId), mapper::toDto);
+        return mapList(statsRepository.getCategoryStats(ownerId), mapper::toDto);
     }
 
     public List<TrendItem> getTrendStats(UUID ownerId, TrendRequest request) {
         OffsetDateTime[] range = resolveDateRange(request.getStartDate(), request.getEndDate(), request.getPeriod());
-        return mapList(jpaStatsRepository.getTrendStats(ownerId, range[0], range[1]), mapper::toDto);
+        return mapList(statsRepository.getTrendStats(ownerId, range[0], range[1]), mapper::toDto);
     }
 
     public OverviewItem getOverview(UUID ownerId) {
-        return mapper.toDto(jpaStatsRepository.getOverview(ownerId));
+        return mapper.toDto(statsRepository.getOverview(ownerId));
     }
 
     public List<TagItem> getTagsStats(UUID ownerId) {
-        return mapList(jpaStatsRepository.getTagsStats(ownerId), mapper::toDto);
+        return mapList(statsRepository.getTagsStats(ownerId), mapper::toDto);
     }
 
     public List<TrendDiffItem> getTrendDiffStats(UUID ownerId) {
@@ -45,12 +45,12 @@ public class StatsService {
 
     public List<TopHoldingItem> getTopHoldings(UUID ownerId, SearchFilter searchFilter) {
         Pageable pageable = buildPageable(searchFilter.getPaginationRequest(), searchFilter.getSortRequest());
-        return mapList(jpaStatsRepository.getTopHoldings(ownerId, pageable), mapper::toDto);
+        return mapList(statsRepository.getTopHoldings(ownerId, pageable), mapper::toDto);
     }
 
     public List<CategoryTrendItem> getCategoryTrend(UUID ownerId, CategoryTrendRequest request) {
         OffsetDateTime[] range = resolveDateRange(request.getStartDate(), request.getEndDate(), request.getPeriod());
-        return mapList(jpaStatsRepository.getCategoryTrend(ownerId, request.getCategory(), range[0], range[1]), mapper::toDto);
+        return mapList(statsRepository.getCategoryTrend(ownerId, request.getCategory(), range[0], range[1]), mapper::toDto);
     }
 
     private OffsetDateTime[] resolveDateRange(OffsetDateTime start, OffsetDateTime end, Period period) {

@@ -11,6 +11,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+      #format_sql: true
     show-sql: true
     properties:
       hibernate:
@@ -30,10 +31,13 @@ logging:
     root: INFO
     com.velaris: DEBUG
     org.springframework.security: WARN
+    #org.hibernate.SQL: debug
+    #org.hibernate.orm.jdbc.bind: trace
 
 jwt:
-  secret: test-secret-key-test-secret-key-test-secret-key-test-secret-key-test-secret-key
-  expiration-ms: 3600000
+  secret: sdhfgsdhfisdfijdjfgvbsojbdkjsnbgijwabgkhubasdjkfbasbfjasbfjksabdf
+  access-expiration-ms: 3600000000
+  refresh-expiration-ms: 7200000000
 
 security:
   public-endpoints:
